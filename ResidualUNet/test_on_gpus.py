@@ -142,11 +142,11 @@ def segment_PETCT(
     export_dir
 ):
     print("starting")
-    device = torch.device("cuda")
+    device = torch.device("cpu")
     chkp_paths = [ckpt_path0, ckpt_path1, ckpt_path2, ckpt_path3, ckpt_path4]
     models = [get_base_model() for _ in range(5)]
     for i in range(5):
-        models[i].load_state_dict(torch.load(chkp_paths[i], map_location=device, weights_only=True))
+        models[i].load_state_dict(torch.load(chkp_paths[i], map_location=device))
         models[i].to(device)
         models[i].eval()
     
@@ -168,6 +168,43 @@ def run_inference(ckpt_path0, ckpt_path1, ckpt_path2, ckpt_path3, ckpt_path4, da
     segment_PETCT(ckpt_path0, ckpt_path1, ckpt_path2, ckpt_path3, ckpt_path4, data_dir, export_dir)
 
 
-if __name__ == '__main__':
-    run_inference()
+#%%
+start_time = time.time()
+ckpt_path0 = '/home/jhubadmin/Projects/autosegnet2024/ResidualUNet/fold0_model_ep=0284.pth'
+ckpt_path1 = '/home/jhubadmin/Projects/autosegnet2024/ResidualUNet/fold1_model_ep=0300.pth'
+ckpt_path2 = '/home/jhubadmin/Projects/autosegnet2024/ResidualUNet/fold2_model_ep=0368.pth'
+ckpt_path3 = '/home/jhubadmin/Projects/autosegnet2024/ResidualUNet/fold3_model_ep=0252.pth'
+ckpt_path4 = '/home/jhubadmin/Projects/autosegnet2024/ResidualUNet/fold4_model_ep=0312.pth'
 
+data_dir = '/data/blobfuse/autopet2024/data/imagesTr'
+images_ct = [os.path.join(data_dir, 'fdg_1f65acff65_05-06-2007_0000.nii.gz')]
+images_pt = [os.path.join(data_dir, 'fdg_1f65acff65_05-06-2007_0001.nii.gz')]
+
+device = torch.device("cuda:0")
+chkp_paths = [ckpt_path0, ckpt_path1, ckpt_path2, ckpt_path3, ckpt_path4]
+
+models = [get_base_model() for _ in range(5)]
+for i in range(5):
+    models[i].load_state_dict(torch.load(chkp_paths[i], map_location=device, weights_only=True))
+    models[i].to(device)
+    models[i].eval()
+
+val_transforms = get_val_transforms()
+data_dicts = [
+        {'CT': image_name_ct, 'PT': image_name_pt}
+        for image_name_ct, image_name_pt,  in zip(images_ct, images_pt)]
+
+val_ds = Dataset(data=data_dicts, transform=val_transforms)
+val_loader = DataLoader(val_ds, batch_size=1, num_workers=0, collate_fn = list_data_collate)
+export_dir = '/home/jhubadmin/Projects/autosegnet2024/ResidualUNet/export_dir'
+post_transforms = get_post_transforms(val_transforms, export_dir)
+ensemble_evaluate(post_transforms, models, device, val_loader)
+file = os.listdir(export_dir)[0]
+old_path = os.path.join(export_dir, file)
+# old_path = os.path.join(export_dir,  os.path.basename(data[0]['PT_meta_dict']['filename_or_obj']))
+new_path = os.path.join(export_dir, 'PRED.nii.gz')
+os.rename(old_path, new_path)
+
+time_elapsed = time.time() - start_time
+print(f'Time taken: {time_elapsed/60:.2f} min')
+# %%

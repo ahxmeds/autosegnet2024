@@ -36,7 +36,7 @@ docker run --rm -it \
 import SimpleITK as sitk
 import os
 print('Start')
-file = os.listdir('/output/images/automated-petct-lesion-segmentation')[0]
+file = os.listdir('/output/images/automated-petct-lesion-segmentation')
 print(file)
 output = sitk.GetArrayFromImage(sitk.ReadImage(os.path.join('/output/images/automated-petct-lesion-segmentation/', file)))
 expected_output = sitk.GetArrayFromImage(sitk.ReadImage('/expected_output/PRED.nii.gz'))

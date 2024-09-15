@@ -2,7 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+/ResidualUNet/export_dir/*
+/ResidualUNet/uNet_baseline.tar.gz
 # C extensions
 *.so
 

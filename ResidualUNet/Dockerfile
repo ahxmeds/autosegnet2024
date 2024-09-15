@@ -1,5 +1,5 @@
 #FROM python:3.9-slim
-FROM pytorch/pytorch
+FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
 
 RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm
 
@@ -16,8 +16,8 @@ RUN python -m pip install --user -U pip
 
 COPY --chown=algorithm:algorithm requirements.txt /opt/algorithm/
 COPY --chown=algorithm:algorithm monai_unet.py /opt/algorithm/
-RUN python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
-RUN python -m pip install --user -rrequirements.txt
+RUN python -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
+RUN python -m pip install --user -r requirements.txt
 
 COPY --chown=algorithm:algorithm fold0_model_ep=0284.pth /opt/algorithm/
 COPY --chown=algorithm:algorithm fold1_model_ep=0300.pth /opt/algorithm/

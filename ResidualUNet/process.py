@@ -1,7 +1,7 @@
 import SimpleITK
 import numpy as np
 import torch
-
+import json
 import monai_unet
 import os
 import shutil
@@ -20,6 +20,7 @@ class Unet_baseline():  # SegmentationAlgorithm is not inherited in this class a
         self.ckpt_path2 = '/opt/algorithm/fold2_model_ep=0368.pth'
         self.ckpt_path3 = '/opt/algorithm/fold3_model_ep=0252.pth'
         self.ckpt_path4 = '/opt/algorithm/fold4_model_ep=0312.pth'
+        self.output_path_category = "/output/data-centric-model.json"
 
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
@@ -70,6 +71,11 @@ class Unet_baseline():  # SegmentationAlgorithm is not inherited in this class a
         self.convert_nii_to_mha(os.path.join(self.output_path, "PRED.nii.gz"), os.path.join(self.output_path, uuid + ".mha"))
         print('Output written to: ' + os.path.join(self.output_path, uuid + ".mha"))
     
+    def save_datacentric(self, value: bool):
+        print("Saving datacentric json to " + self.output_path_category)
+        with open(self.output_path_category, "w") as json_file:
+            json.dump(value, json_file, indent=4)
+
     def predict(self, inputs):
         """
         Your algorithm goes here
@@ -95,6 +101,7 @@ class Unet_baseline():  # SegmentationAlgorithm is not inherited in this class a
             self.output_path
         )
         print('Start output writing')
+        self.save_datacentric(False)
         self.write_outputs(uuid)
 
 
